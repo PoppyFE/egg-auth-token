@@ -1,0 +1,146 @@
+/**
+ * Created by alex on 2017/9/16.
+ */
+
+'use strict';
+
+const crypto = require('crypto');
+const uuid = require('uuid');
+const ms = require('ms');
+
+class AuthData {
+
+ constructor(ctx, props) {
+   this._ctx = ctx;
+
+   for (const k in props) {
+     this[k] = props[k];
+   }
+
+   if (!this.sessionName) {
+     throw new Error('AuthData sessionName is empty!');
+   }
+
+   if (!this.id) {
+     throw new Error('AuthData id is empty!');
+   }
+
+   if (!this.maxAge) {
+     throw new Error('AuthData maxAge is empty!');
+   }
+
+   if (!this.random) this.random = uuid();
+   const timeStamp = new Date().getTime();
+   if (!this.createAt) this.createAt = timeStamp;
+   if (!this.updateAt) this.updateAt = timeStamp;
+
+   if (!this.authToken) {
+     this.authToken = crypto.createHash('md5').update(JSON.stringify({
+       id: this.id,
+       random: this.random,
+       createAt: this.createAt,
+     })).digest('hex');
+   }
+
+   if (!this.steps) this.steps = [];
+ }
+
+  popStep() {
+    if (this.steps && this.steps.length > 0) {
+      this.steps.shift();
+    }
+  }
+
+  get nextStep() {
+    if (this.steps && this.steps.length > 0) {
+      return this.steps[0] || '';
+    } else {
+      return '';
+    }
+  }
+
+  hasNextStep() {
+    return this.steps && this.steps.length > 0
+  }
+
+ toJSON() {
+   const obj = {};
+   Object.keys(this).forEach(key => {
+     if (typeof key !== 'string') return;
+     if (key[0] === '_') return;
+
+     obj[key] = this[key];
+   });
+
+   return obj;
+ }
+}
+
+module.exports = {
+
+  appendAuthData2Resp(authData) {
+    if (!authData) return;
+
+    if (!this.body.data) {
+      this.body.data = {};
+    }
+
+    if (!this.body.data.auth_token) return;
+
+    // append this response.
+    this.body.data.session_name = authData.sessionName;
+    this.body.data.auth_token = authData.authToken;
+    this.body.data.auth_next_step = authData.nextStep;
+  },
+
+  * createAuthData(props, maxAge) {
+    const { logger, redis } = this;
+
+    props.maxAge = props.maxAge || maxAge || ms(this.app.config.authToken.maxAge);
+
+    const authData = new AuthData(this, props);
+
+    yield redis.set(authData.authToken, authData.toJSON(), 'EX', authData.maxAge * 0.001);
+
+    logger.info(`redis 创建 accessData ( ${authData.id} )数据 authToken: ${authData.authToken}`);
+
+    return authData;
+  },
+
+  * findAuthData(authToken) {
+    const { logger, redis } = this;
+
+    if (!authToken) return;
+
+    const authDataStr = yield redis.get(authToken);
+    if (!authDataStr) {
+      logger.info(`redis 获取 authData 数据 authToken: ${authToken} 失败 不存在!`);
+      return;
+    }
+
+    let authData = null;
+    try {
+      authData = JSON.parse(authDataStr);
+    } catch (err) {
+      logger.info(`authData 数据 解析错误: ${err.message} ${authDataStr}`);
+      return;
+    }
+
+    if (!authData) {
+      logger.info(`redis 获取 authData 数据 authToken: ${authToken} 为空！`);
+      return;
+    }
+
+    return new AuthData(this, authData);
+  },
+
+  * destroyAuthData(authToken) {
+    const { logger, redis } = this;
+
+    if (!authToken) return;
+
+    yield redis.del(authToken);
+
+    logger.info(`删除 authToken: ${authToken} !`);
+  },
+};
