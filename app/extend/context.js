@@ -110,7 +110,7 @@ module.exports = {
 
     await redis.set(authData.authToken, authData.toJSON(), 'EX', authData.maxAge * 0.001);
 
-    logger.info(`redis 创建 accessData ( ${authData.id} )数据 authToken: ${authData.authToken}`);
+    logger.info(`redis 创建 accessData ( ${authData.id} )数据 authToken: ${authData.authToken} 有效期 ${authData.maxAge}`);
 
     return authData;
   },
