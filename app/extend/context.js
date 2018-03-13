@@ -74,6 +74,14 @@ class AuthData {
 
    return obj;
  }
+
+ toResp() {
+    return {
+      session_name: this.sessionName,
+      auth_token: this.authToken,
+      auth_next_step: this.nextStep,
+    }
+ }
 }
 
 module.exports = {
@@ -88,31 +96,29 @@ module.exports = {
     if (!this.body.data.auth_token) return;
 
     // append this response.
-    this.body.data.session_name = authData.sessionName;
-    this.body.data.auth_token = authData.authToken;
-    this.body.data.auth_next_step = authData.nextStep;
+    Object.assign(this.body.data, authData.toResp());
   },
 
-  * createAuthData(props, maxAge) {
+  async createAuthData(props, maxAge) {
     const { logger, redis } = this;
 
     props.maxAge = props.maxAge || maxAge || ms(this.app.config.authToken.maxAge);
 
     const authData = new AuthData(this, props);
 
-    yield redis.set(authData.authToken, authData.toJSON(), 'EX', authData.maxAge * 0.001);
+    await redis.set(authData.authToken, authData.toJSON(), 'EX', authData.maxAge * 0.001);
 
     logger.info(`redis 创建 accessData ( ${authData.id} )数据 authToken: ${authData.authToken}`);
 
     return authData;
   },
 
-  * findAuthData(authToken) {
+  async findAuthData(authToken) {
     const { logger, redis } = this;
 
     if (!authToken) return;
 
-    const authDataStr = yield redis.get(authToken);
+    const authDataStr = await redis.get(authToken);
     if (!authDataStr) {
       logger.info(`redis 获取 authData 数据 authToken: ${authToken} 失败 不存在!`);
       return;
@@ -134,12 +140,12 @@ module.exports = {
     return new AuthData(this, authData);
   },
 
-  * destroyAuthData(authToken) {
+  async destroyAuthData(authToken) {
     const { logger, redis } = this;
 
     if (!authToken) return;
 
-    yield redis.del(authToken);
+    await redis.del(authToken);
 
     logger.info(`删除 authToken: ${authToken} !`);
   },

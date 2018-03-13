@@ -32,43 +32,43 @@ function validAuthData(authData, opts) {
 
 module.exports = opts => {
 
-  return function* (next) {
+  return async function (ctx, next) {
 
-    const { logger, request } = this;
+    const { logger, request } = ctx;
     const authToken = request.headers['auth-token'] || request.body.auth_token;
 
     if (!authToken) {
       logger.info('authToken 未设置！');
-      this.formatFailResp({errCode: 'F400'});
+      ctx.formatFailResp({errCode: 'F400'});
       return;
     }
 
-    const authData = yield* this.findAuthData(authToken);
+    const authData = await ctx.findAuthData(authToken);
     if (!authData) {
       logger.info(`authToken: ${authToken} 已经失效！`);
-      this.formatFailResp({errCode: 'F400'});
+      ctx.formatFailResp({errCode: 'F400'});
       return;
     }
 
     const validAuthDataMsg = validAuthData(authData, opts);
     if (validAuthDataMsg !== true) {
       logger.info(`authToken 验证失败 原因是: ${validAuthDataMsg}`);
-      this.formatFailResp({errCode: 'F403', msg: validAuthDataMsg});
+      ctx.formatFailResp({errCode: 'F403', msg: validAuthDataMsg});
       return;
     }
 
-    this.authData = request.authData = authData;
+    ctx.authData = request.authData = authData;
 
-    yield next;
+    await next();
 
     // 业务终点，结束token， 这样让其过期
-    if (!this.isSuccessResp()) return;
+    if (!ctx.isSuccessResp()) return;
 
     // 上一步成功后
-    yield this.destroyAuthData(authToken);
+    await ctx.destroyAuthData(authToken);
 
-    if (!this.authData) return;
-    this.authData.popStep();
+    if (!ctx.authData) return;
+    ctx.authData.popStep();
 
     // 非业务终点会，自动产生新的auth_token
     if (opts.isEnd) return;
@@ -76,7 +76,7 @@ module.exports = opts => {
     // 这里即使消费掉了nextStep 到了最后一步，依然会持续刷新当前的。
     const copyAuthData = this.authData.toJSON();
     copyAuthData.authToken = undefined;
-    const newAuthData = yield* this.createAuthData(copyAuthData);
-    this.appendAuthData2Resp(newAuthData);
+    const newAuthData = await ctx.createAuthData(copyAuthData);
+    ctx.appendAuthData2Resp(newAuthData);
   };
 };
