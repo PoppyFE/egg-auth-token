@@ -100,7 +100,9 @@ module.exports = {
   },
 
   async createAuthData(props, maxAge) {
-    const { logger, redis } = this;
+    const { logger, app } = this;
+    const { redis } = app;
+
 
     props.maxAge = props.maxAge || maxAge || ms(this.app.config.authToken.maxAge);
 
@@ -114,7 +116,8 @@ module.exports = {
   },
 
   async findAuthData(authToken) {
-    const { logger, redis } = this;
+    const { logger, app } = this;
+    const { redis } = app;
 
     if (!authToken) return;
 
@@ -141,7 +144,8 @@ module.exports = {
   },
 
   async destroyAuthData(authToken) {
-    const { logger, redis } = this;
+    const { logger, app } = this;
+    const { redis } = app;
 
     if (!authToken) return;
 
