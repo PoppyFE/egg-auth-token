@@ -10,40 +10,40 @@ const ms = require('ms');
 
 class AuthData {
 
- constructor(ctx, props) {
-   this._ctx = ctx;
+  constructor(ctx, props) {
+    this._ctx = ctx;
 
-   for (const k in props) {
-     this[k] = props[k];
-   }
+    for (const k in props) {
+      this[k] = props[k];
+    }
 
-   if (!this.sessionName) {
-     throw new Error('AuthData sessionName is empty!');
-   }
+    if (!this.sessionName) {
+      throw new Error('AuthData sessionName is empty!');
+    }
 
-   if (!this.id) {
-     throw new Error('AuthData id is empty!');
-   }
+    if (!this.id) {
+      throw new Error('AuthData id is empty!');
+    }
 
-   if (!this.maxAge) {
-     throw new Error('AuthData maxAge is empty!');
-   }
+    if (!this.maxAge) {
+      throw new Error('AuthData maxAge is empty!');
+    }
 
-   if (!this.random) this.random = uuid();
-   const timeStamp = new Date().getTime();
-   if (!this.createAt) this.createAt = timeStamp;
-   if (!this.updateAt) this.updateAt = timeStamp;
+    if (!this.random) this.random = uuid();
+    const timeStamp = new Date().getTime();
+    if (!this.createAt) this.createAt = timeStamp;
+    if (!this.updateAt) this.updateAt = timeStamp;
 
-   if (!this.authToken) {
-     this.authToken = crypto.createHash('md5').update(JSON.stringify({
-       id: this.id,
-       random: this.random,
-       createAt: this.createAt,
-     })).digest('hex');
-   }
+    if (!this.authToken) {
+      this.authToken = crypto.createHash('md5').update(JSON.stringify({
+        id: this.id,
+        random: this.random,
+        createAt: this.createAt,
+      })).digest('hex');
+    }
 
-   if (!this.steps) this.steps = [];
- }
+    if (!this.steps) this.steps = [];
+  }
 
   popStep() {
     if (this.steps && this.steps.length > 0) {
@@ -54,34 +54,34 @@ class AuthData {
   get nextStep() {
     if (this.steps && this.steps.length > 0) {
       return this.steps[0] || '';
-    } else {
-      return '';
     }
+    return '';
+
   }
 
   hasNextStep() {
-    return this.steps && this.steps.length > 0
+    return this.steps && this.steps.length > 0;
   }
 
- toJSON() {
-   const obj = {};
-   Object.keys(this).forEach(key => {
-     if (typeof key !== 'string') return;
-     if (key[0] === '_') return;
+  toJSON() {
+    const obj = {};
+    Object.keys(this).forEach(key => {
+      if (typeof key !== 'string') return;
+      if (key[0] === '_') return;
 
-     obj[key] = this[key];
-   });
+      obj[key] = this[key];
+    });
 
-   return obj;
- }
+    return obj;
+  }
 
- toResp() {
+  toResp() {
     return {
       session_name: this.sessionName,
       auth_token: this.authToken,
       auth_next_step: this.nextStep,
-    }
- }
+    };
+  }
 }
 
 module.exports = {
