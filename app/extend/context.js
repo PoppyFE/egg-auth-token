@@ -108,7 +108,7 @@ module.exports = {
 
     const authData = new AuthData(this, props);
 
-    await redis.set(authData.authToken, authData.toJSON(), 'EX', authData.maxAge * 0.001);
+    await redis.set(authData.authToken, JSON.stringify(authData.toJSON()), 'EX', authData.maxAge * 0.001);
 
     logger.info(`redis 创建 accessData ( ${authData.id} )数据 authToken: ${authData.authToken} 有效期 ${authData.maxAge}`);
 
