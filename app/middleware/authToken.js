@@ -28,32 +28,34 @@ function validAuthData(authData, opts) {
       return `AuthData 验证失败 对应处理模块不对 期望是: ${opts.module} 实际是: ${authData.nextStep}`;
     }
   }
-};
 
-module.exports = opts => {
+  return true;
+}
 
-  return async function (ctx, next) {
+module.exports = (opts = {}) => {
+
+  return async function(ctx, next) {
 
     const { logger, request } = ctx;
     const authToken = request.headers['auth-token'] || request.body.auth_token;
 
     if (!authToken) {
       logger.info('authToken 未设置！');
-      ctx.formatFailResp({errCode: 'F400'});
+      ctx.formatFailResp({ errCode: 'F403' });
       return;
     }
 
     const authData = await ctx.findAuthData(authToken);
     if (!authData) {
       logger.info(`authToken: ${authToken} 已经失效！`);
-      ctx.formatFailResp({errCode: 'F400'});
+      ctx.formatFailResp({ errCode: 'F401-1' });
       return;
     }
 
     const validAuthDataMsg = validAuthData(authData, opts);
     if (validAuthDataMsg !== true) {
       logger.info(`authToken 验证失败 原因是: ${validAuthDataMsg}`);
-      ctx.formatFailResp({errCode: 'F403', msg: validAuthDataMsg});
+      ctx.formatFailResp({ errCode: 'F401-1' });
       return;
     }
 
@@ -74,7 +76,7 @@ module.exports = opts => {
     if (opts.isEnd) return;
 
     // 这里即使消费掉了nextStep 到了最后一步，依然会持续刷新当前的。
-    const copyAuthData = this.authData.toJSON();
+    const copyAuthData = ctx.authData.toJSON();
     copyAuthData.authToken = undefined;
     const newAuthData = await ctx.createAuthData(copyAuthData);
     ctx.appendAuthData2Resp(newAuthData);
