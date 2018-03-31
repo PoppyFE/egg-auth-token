@@ -1,6 +1,6 @@
 {
   "name": "egg-auth-token",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "",
   "eggPlugin": {
     "name": "authToken"
@@ -39,6 +39,7 @@
     "publish": "npm publish --registry https://registry.npmjs.org"
   },
   "files": [
+    "app",
     "app.js",
     "agent.js",
     "config"
