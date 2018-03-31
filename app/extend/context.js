@@ -93,7 +93,7 @@ module.exports = {
       this.body.data = {};
     }
 
-    if (!this.body.data.auth_token) return;
+    if (this.body.data.auth_token) return;
 
     // append this response.
     Object.assign(this.body.data, authData.toResp());
