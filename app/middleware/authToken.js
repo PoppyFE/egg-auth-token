@@ -78,6 +78,7 @@ module.exports = (opts = {}) => {
     // 这里即使消费掉了nextStep 到了最后一步，依然会持续刷新当前的。
     const copyAuthData = ctx.authData.toJSON();
     copyAuthData.authToken = undefined;
+    copyAuthData.random = undefined;
     const newAuthData = await ctx.createAuthData(copyAuthData);
     ctx.appendAuthData2Resp(newAuthData);
   };
