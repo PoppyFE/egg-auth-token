@@ -38,8 +38,8 @@ module.exports = (opts = {}) => {
 
   return async function(ctx, next) {
 
-    const { logger, request } = ctx;
-    const authToken = request.headers['auth-token'] || request.body.auth_token;
+    const { logger, request, query } = ctx;
+    const authToken = request.headers['auth-token'] || request.body.auth_token || query.auth_token;
 
     if (!authToken) {
       logger.info('authToken 未设置！');
