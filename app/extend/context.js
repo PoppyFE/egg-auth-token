@@ -51,6 +51,14 @@ class AuthData {
     }
   }
 
+  pushStep(step) {
+    if (typeof step !== 'string') {
+      throw new Error('Invalid Params step type, must be string.');
+    }
+
+    this.steps.push(step);
+  }
+
   get nextStep() {
     if (this.steps && this.steps.length > 0) {
       return this.steps[0] || '';
