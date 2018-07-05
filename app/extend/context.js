@@ -88,6 +88,7 @@ class AuthData {
       session_name: this.sessionName,
       auth_token: this.authToken,
       auth_next_step: this.nextStep,
+      auth_max_age: this.maxAge,
     };
   }
 }
