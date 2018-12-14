@@ -85,6 +85,7 @@ class AuthData {
 
   toResp() {
     return {
+      id: this.id,
       session_name: this.sessionName,
       auth_token: this.authToken,
       auth_next_step: this.nextStep,
