@@ -113,8 +113,8 @@ module.exports = {
     const { logger, app } = this;
     const { redis } = app;
 
-
-    props.maxAge = props.maxAge || maxAge || ms(this.app.config.authToken.maxAge);
+    props.maxAge = props.maxAge || maxAge || this.app.config.authToken.maxAge;
+    props.maxAge = ms(props.maxAge);
 
     const authData = new AuthData(this, props);
 
