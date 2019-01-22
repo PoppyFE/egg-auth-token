@@ -114,7 +114,7 @@ module.exports = {
     const { redis } = app;
 
     props.maxAge = props.maxAge || maxAge || this.app.config.authToken.maxAge;
-    props.maxAge = ms(props.maxAge);
+    props.maxAge = typeof props.maxAge === 'string' ? ms(props.maxAge) : (parseInt(props.maxAge) || 0);
 
     const authData = new AuthData(this, props);
 
