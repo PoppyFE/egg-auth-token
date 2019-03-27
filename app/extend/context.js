@@ -43,11 +43,14 @@ class AuthData {
     }
 
     if (!this.steps) this.steps = [];
+
+    this._dataDirty = false;
   }
 
   popStep() {
     if (this.steps && this.steps.length > 0) {
       this.steps.shift();
+      this.flush();
     }
   }
 
@@ -57,6 +60,7 @@ class AuthData {
     }
 
     this.steps.push(step);
+    this.flush();
   }
 
   get nextStep() {
@@ -92,6 +96,32 @@ class AuthData {
       auth_max_age: this.maxAge,
     };
   }
+
+
+  flush() {
+    this.updateAt = new Date().getTime();
+    this._dataDirty = true;
+  }
+
+  async save(force) {
+    if (!force && !this._dataDirty) {
+      return;
+    }
+
+    const { logger } = this._ctx;
+    const { redis } = this._ctx.app;
+
+    await redis.set(this.authToken, JSON.stringify(this.toJSON()), 'PX', this.maxAge);
+    logger.info(`redis 保存 authData ( ${this.id} )数据 authToken: ${this.authToken} 有效期 ${this.maxAge}`);
+
+    this._dataDirty = false;
+  }
+
+  async active() {
+    const { redis } = this._ctx.app;
+    await redis.expire(this.authToken, this.maxAge * 0.001);
+  }
+
 }
 
 module.exports = {
