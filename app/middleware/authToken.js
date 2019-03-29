@@ -13,8 +13,6 @@
  */
 
 function validAuthData(authData, opts) {
-  if (opts.readonly) return true;
-
   if (opts.sessionName) {
     if (authData.sessionName !== opts.sessionName) {
       return `AuthData 验证失败 sessionName 不一致 期望是 ${opts.sessionName} 实际是: ${authData.sessionName}:`;
